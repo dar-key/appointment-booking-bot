@@ -2,6 +2,8 @@ import asyncio
 import logging
 import os
 import re
+import gspread_asyncio
+from google.oauth2.service_account import Credentials
 from aiogram import F, Bot, Dispatcher
 from aiogram.types import (
     Message,
@@ -13,6 +15,7 @@ from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.context import FSMContext
 from aiogram.filters import CommandStart
 from dotenv import load_dotenv
+from aiogram.client.session.aiohttp import AiohttpSession
 
 load_dotenv()
 BOT_TOKEN = os.getenv("BOT_TOKEN")
@@ -28,8 +31,23 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-bot = Bot(token=BOT_TOKEN)
+# session = AiohttpSession(proxy="http://proxy.server:3128")
+bot = Bot(token=BOT_TOKEN) #, session=session)
 dp = Dispatcher()
+
+
+def get_creds():
+    return Credentials.from_service_account_file(
+        "credentials.json",
+        scopes=[
+            "https://spreadsheets.google.com/feeds",
+            "https://www.googleapis.com/auth/drive",
+        ],
+    )
+
+
+agcm = gspread_asyncio.AsyncioGspreadClientManager(get_creds)
+
 
 SERVICES = ["Стрижка (5000 ₸)", "Маникюр (4000 ₸)", "Массаж (8000 ₸)"]
 TIME_SLOTS = ["10:00", "12:00", "14:00", "16:00", "18:00"]
@@ -43,13 +61,44 @@ class BookingState(StatesGroup):
 
 
 async def get_booked_slots(date: str) -> list:
-    return []
+    try:
+        agc = await agcm.authorize()
+        spreadsheet = await agc.open_by_key(SPREADSHEET_ID)
+        worksheet = await spreadsheet.get_worksheet(0)
+
+        # Get all records from sheet (each row is a list of cells)
+        records = await worksheet.get_all_records()
+
+        # Filter slots that are booked on the requested date
+        booked_slots = [row["Time"] for row in records if str(row["Date"]) == date]
+        return booked_slots
+    except Exception as e:
+        logger.error(f"Failed to read from Google Sheets: {e}")
+        return []
 
 
 async def save_booking_to_sheets(
     user_id: int, username: str, phone: str, service: str, date: str, time: str
 ):
-    pass
+    try:
+        agc = await agcm.authorize()
+        spreadsheet = await agc.open_by_key(SPREADSHEET_ID)
+        worksheet = await spreadsheet.get_worksheet(0)
+
+        # Format of the row to append
+        row_data = [
+            user_id,
+            f"@{username}" if username else "N/A",
+            phone,
+            service,
+            date,
+            time,
+        ]
+        await worksheet.append_row(row_data)
+        logger.info(f"Successfully saved booking for {user_id} in Google Sheets.")
+    except Exception as e:
+        logger.error(f"Failed to write to Google Sheets: {e}")
+        raise e
 
 
 # Dispatcher
