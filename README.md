@@ -1,65 +1,138 @@
-## [Ссылка для теста бота](https://t.me/gspread_booking_bot)
+# Appointment Booking Telegram Bot
 
-# Telegram-бот для онлайн-записи (aiogram 3 + Google Sheets)
+A Telegram bot for booking appointments with Google Sheets as the backend.
 
-Простой асинхронный бот для записи клиентов на услуги салона. Бот собирает данные пользователя по шагам (FSM), проверяет занятость слотов и записывает бронирования в Google Таблицу.
+The bot guides users through the booking process, checks time slot availability, and stores reservations in a shared Google Spreadsheet.
 
-## Основной функционал
+> **Demo Bot**
+>
+> https://t.me/booking_temp_bot
 
-- Пошаговый сценарий бронирования (выбор услуги -> выбор даты -> выбор времени -> ввод телефона).
-- Асинхронная запись в Google Sheets без блокировки основного потока бота.
-- Защита от параллельной записи на одно и то же время (Race Condition).
-- Проверка занятых слотов перед выводом клавиатуры пользователю.
+---
 
-## Системные требования
+**Demo**
 
-- Python 3.11 или выше
-- Сервисный аккаунт Google Cloud (с доступом к Sheets и Drive API)
+User selects a service -> chooses a date and time -> enters a phone number -> the booking instantly appears in Google Sheets.
 
-## Установка и запуск
+![Demo](docs/demo.gif)
 
-1. Клонируйте репозиторий:
+![](docs/spreadsheets.png)
+
+---
+
+## Features
+
+- Step-by-step booking flow
+- Google Sheets integration
+- Prevents double bookings
+- Checks available time slots before confirmation
+- Asynchronous request handling
+- Multi-user support
+
+---
+
+## Tech Stack
+
+- Python 3.11+
+- aiogram 3
+- gspread
+- Google Sheets API
+- aiosqlite (if used)
+- python-dotenv
+
+---
+
+## Project Structure
+
+```text
+.
+├── booking_bot.py
+├── handlers/
+├── keyboards/
+├── states/
+├── services/
+├── database.py
+├── google_sheets.py
+├── config.py
+├── requirements.txt
+└── .env
+```
+
+---
+
+## Installation
+
+Clone the repository.
 
 ```bash
 git clone https://github.com/dar-key/service-booking-bot.git
 cd service-booking-bot
 ```
 
-2.  Создайте и активируйте виртуальное окружение:
+Create a virtual environment.
 
 ```bash
 python -m venv .venv
-source .venv/bin/activate  # Для Linux/macOS
-.venv\Scripts\activate     # Для Windows
 ```
 
-3.  Установите зависимости:
+Activate it.
+
+Linux / macOS
+
+```bash
+source .venv/bin/activate
+```
+
+Windows
+
+```powershell
+.venv\Scripts\activate
+```
+
+Install dependencies.
 
 ```bash
 pip install -r requirements.txt
 ```
 
-4.  Подготовьте файл конфигурации .env в корне проекта:
+---
 
-```bash
-BOT_TOKEN=123456:ABC-DEF_your_token_here
-SPREADSHEET_ID=your_google_sheet_id_here
+## Configuration
+
+Create a `.env` file.
+
+```env
+BOT_TOKEN=your_bot_token
+SPREADSHEET_ID=your_google_sheet_id
 ```
 
-5.  Положите файл ключа сервисного аккаунта Google под именем credentials.json в
-    корневую директорию проекта.
+Place your Google service account credentials in the project root.
 
-6.  Запустите бота:
+```
+credentials.json
+```
+
+---
+
+## Google Sheets Setup
+
+1. Create a project in Google Cloud Console.
+2. Enable the **Google Sheets API** and **Google Drive API**.
+3. Create a Service Account and download its JSON credentials.
+4. Rename the file to `credentials.json`.
+5. Share your spreadsheet with the Service Account email.
+6. Copy the spreadsheet ID into your `.env` file.
+
+---
+
+## Run
 
 ```bash
 python booking_bot.py
 ```
 
-Настройка интеграции с Google Sheets
+---
 
-1.  Создайте проект в Google Cloud Console и включите Sheets API и Drive API.
-2.  Создайте Сервисный аккаунт, скачайте его ключ в формате JSON и переименуйте
-    в credentials.json.
-3.  Создайте Google Таблицу и добавьте доступ на редактирование (кнопка
-    "Поделиться") для email-адреса сервисного аккаунта.
-4.  Скопируйте ID таблицы из адресной строки и укажите его в .env.
+## License
+
+MIT

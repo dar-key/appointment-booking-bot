@@ -19,10 +19,11 @@ from aiogram.client.session.aiohttp import AiohttpSession
 
 load_dotenv()
 BOT_TOKEN = os.getenv("BOT_TOKEN")
-SPREADSHEET_ID = os.getenv("SPREADSHEET_ID")
+GOOGLE_SHEET_ID = os.getenv("GOOGLE_SHEET_ID")
 
-if not BOT_TOKEN or not SPREADSHEET_ID:
-    print("Error: BOT_TOKEN or SPREADSHEET_ID couldn't load.")
+
+if not BOT_TOKEN or not GOOGLE_SHEET_ID:
+    print("Error: BOT_TOKEN or GOOGLE_SHEET_ID couldn't load.")
     exit()
 
 
@@ -32,7 +33,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # session = AiohttpSession(proxy="http://proxy.server:3128")
-bot = Bot(token=BOT_TOKEN) #, session=session)
+bot = Bot(token=BOT_TOKEN)  # , session=session)
 dp = Dispatcher()
 
 
@@ -63,7 +64,7 @@ class BookingState(StatesGroup):
 async def get_booked_slots(date: str) -> list:
     try:
         agc = await agcm.authorize()
-        spreadsheet = await agc.open_by_key(SPREADSHEET_ID)
+        spreadsheet = await agc.open_by_key(GOOGLE_SHEET_ID)
         worksheet = await spreadsheet.get_worksheet(0)
 
         # Get all records from sheet (each row is a list of cells)
@@ -82,7 +83,7 @@ async def save_booking_to_sheets(
 ):
     try:
         agc = await agcm.authorize()
-        spreadsheet = await agc.open_by_key(SPREADSHEET_ID)
+        spreadsheet = await agc.open_by_key(GOOGLE_SHEET_ID)
         worksheet = await spreadsheet.get_worksheet(0)
 
         # Format of the row to append
