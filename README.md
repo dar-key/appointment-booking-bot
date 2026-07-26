@@ -16,8 +16,6 @@ User selects a service -> chooses a date and time -> enters a phone number -> th
 
 ![Demo](docs/demo.gif)
 
-![](docs/spreadsheets.png)
-
 ---
 
 ## Features
