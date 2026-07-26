@@ -29,7 +29,7 @@ async def get_booked_slots(date: str) -> list[str]:
 
 
 async def save_booking_to_sheets(
-    user_id: int, username: str, phone: str, service: str, date: str, time: str
+    user_id: int, username: str | None, phone: str, service: str, date: str, time: str
 ):
     try:
         agc = await agcm.authorize()

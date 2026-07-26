@@ -13,7 +13,11 @@ from src.bot.keyboards.booking import (
     get_time_slots_keyboard,
 )
 from src.bot.utils.telegram import require_message
-from src.bot.callback_data.booking import ServiceCb
+from src.bot.callback_data.booking import (
+    ServiceCb,
+    DateCb,
+    TimeCb,
+)
 
 router = Router()
 
@@ -31,36 +35,47 @@ async def cmd_start(message: Message, state: FSMContext):
     F.data == "start_booking",
 )
 async def process_start_booking(cb: CallbackQuery, state: FSMContext):
-    await cb.message.edit_text(
+    msg = require_message(cb)
+    await msg.edit_text(
         "Step 1/4: Select a service:", reply_markup=get_services_keyboard()
     )
     await state.set_state(BookingState.choosing_service)
 
 
-@router.callback_query(BookingState.choosing_service, F.data.startswith("service:"))
-async def process_service(cb: CallbackQuery, state: FSMContext):
-    selected_service = cb.data.split(":")[1]
+@router.callback_query(
+    BookingState.choosing_service,
+    ServiceCb.filter(),
+)
+async def process_service(
+    cb: CallbackQuery, callback_data: ServiceCb, state: FSMContext
+):
+    selected_service = callback_data.name
     await state.update_data(service=selected_service)
 
-    await cb.message.edit_text(
+    msg = require_message(cb)
+    await msg.edit_text(
         f"Selected service: {selected_service}\n\nStep 2/4: Select a date:",
         reply_markup=get_dates_keyboard(),
     )
     await state.set_state(BookingState.choosing_date)
 
 
-@router.callback_query(BookingState.choosing_date, F.data.startswith("date:"))
-async def process_date(cb: CallbackQuery, state: FSMContext):
-    selected_date = cb.data.split(":")[1]
+@router.callback_query(
+    BookingState.choosing_date,
+    DateCb.filter(),
+)
+async def process_date(cb: CallbackQuery, callback_data: DateCb, state: FSMContext):
+    selected_date = callback_data.date
     await state.update_data(date=selected_date)
 
-    await cb.message.edit_text("Checking available slots...")
+    msg = require_message(cb)
+    await msg.edit_text("Checking available slots...")
 
     booked_slots = await get_booked_slots(selected_date)
     keyboard = get_time_slots_keyboard(booked_slots)
 
     data = await state.get_data()
-    await cb.message.edit_text(
+    await msg.edit_text(
         f"Service: {data['service']}\n"
         f"Date: {selected_date}\n\n"
         f"Step 3/4: Select an available time slot:",
@@ -77,22 +92,25 @@ async def process_slot_taken(callback: CallbackQuery):
     )
 
 
-@router.callback_query(BookingState.choosing_time, F.data.startswith("time:"))
-async def process_time(callback: CallbackQuery, state: FSMContext):
-    selected_time = ":".join(callback.data.split(":")[1:])
+@router.callback_query(BookingState.choosing_time, TimeCb.filter())
+async def process_time(cb: CallbackQuery, callback_data: TimeCb, state: FSMContext):
+    selected_time = callback_data.time.replace("-", ":")
     await state.update_data(time=selected_time)
 
-    await callback.message.edit_text(
-        "Step 4/4: Please enter your phone number in the chat:\n"
-    )
+    msg = require_message(cb)
+    await msg.edit_text("Step 4/4: Please enter your phone number in the chat:\n")
     await state.set_state(BookingState.entering_phone)
 
 
 @router.message(BookingState.entering_phone)
 async def process_phone(message: Message, state: FSMContext):
+    if message.text is None:
+        await message.answer("Please send a text message.")
+        return
+
     phone = message.text.strip()
 
-    if not re.match(r"^\+?[1-9]\d{1,14}$", re.sub(r"\D", "", phone)):
+    if not re.fullmatch(r"^\+?[1-9]\d{1,14}$", re.sub(r"\D", "", phone)):
         await message.answer(
             "Invalid phone number format. Please enter a valid phone number."
         )
@@ -112,9 +130,13 @@ async def process_phone(message: Message, state: FSMContext):
     await message.answer("Saving your booking, please wait...")
 
     try:
+        user = message.from_user
+        if user is None:
+            return
+
         await save_booking_to_sheets(
-            user_id=message.from_user.id,
-            username=message.from_user.username,
+            user_id=user.id,
+            username=user.username,
             phone=phone,
             service=data["service"],
             date=data["date"],

@@ -1,5 +1,11 @@
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from src.bot.config import SERVICES, TIME_SLOTS
+from src.bot.callback_data.booking import (
+    ServiceCb,
+    DateCb,
+    TimeCb,
+)
+from src.bot.config import SERVICES, TIME_SLOTS
 
 
 def get_start_keyboard() -> InlineKeyboardMarkup:
@@ -16,7 +22,11 @@ def get_start_keyboard() -> InlineKeyboardMarkup:
 
 def get_services_keyboard() -> InlineKeyboardMarkup:
     buttons = [
-        [InlineKeyboardButton(text=service, callback_data=f"service:{service}")]
+        [
+            InlineKeyboardButton(
+                text=service, callback_data=ServiceCb(name=service).pack()
+            )
+        ]
         for service in SERVICES
     ]
     return InlineKeyboardMarkup(inline_keyboard=buttons)
@@ -25,8 +35,16 @@ def get_services_keyboard() -> InlineKeyboardMarkup:
 def get_dates_keyboard() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
-            [InlineKeyboardButton(text="Today (25.06)", callback_data="date:25.06")],
-            [InlineKeyboardButton(text="Tomorrow (26.06)", callback_data="date:26.06")],
+            [
+                InlineKeyboardButton(
+                    text="Today (25.06)", callback_data=DateCb(date="25.06").pack()
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text="Tomorrow (26.06)", callback_data=DateCb(date="26.06").pack()
+                )
+            ],
         ]
     )
 
@@ -44,6 +62,11 @@ def get_time_slots_keyboard(booked_slots: list[str]) -> InlineKeyboardMarkup:
             )
         else:
             buttons.append(
-                [InlineKeyboardButton(text=slot, callback_data=f"time:{slot}")]
+                [
+                    InlineKeyboardButton(
+                        text=slot,
+                        callback_data=TimeCb(time=slot.replace(":", "-")).pack(),
+                    )
+                ]
             )
     return InlineKeyboardMarkup(inline_keyboard=buttons)
