@@ -14,7 +14,7 @@ The bot guides users through the booking process, checks time slot availability,
 
 User selects a service -> chooses a date and time -> enters a phone number -> the booking instantly appears in Google Sheets.
 
-![Demo](docs/demo.mp4)
+![Demo](docs/demo.apng)
 
 ---
 
