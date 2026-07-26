@@ -1,23 +1,27 @@
 import re
-from aiogram import Router, F
+
+from aiogram import F, Router
+from aiogram.exceptions import TelegramAPIError
 from aiogram.filters import CommandStart
 from aiogram.fsm.context import FSMContext
-from aiogram.types import Message, CallbackQuery
+from aiogram.types import CallbackQuery, Message
+from gspread.exceptions import GSpreadException
 
-from src.bot.states import BookingState
-from src.bot.sheets import get_booked_slots, save_booking_to_sheets
-from src.bot.keyboards.booking import (
-    get_start_keyboard,
-    get_services_keyboard,
-    get_dates_keyboard,
-    get_time_slots_keyboard,
-)
-from src.bot.utils.telegram import require_message
 from src.bot.callback_data.booking import (
-    ServiceCb,
     DateCb,
+    ServiceCb,
     TimeCb,
 )
+from src.bot.config import logger
+from src.bot.keyboards.booking import (
+    get_dates_keyboard,
+    get_services_keyboard,
+    get_start_keyboard,
+    get_time_slots_keyboard,
+)
+from src.bot.sheets import get_booked_slots, save_booking_to_sheets
+from src.bot.states import BookingState
+from src.bot.utils.telegram import require_message
 
 router = Router()
 
@@ -153,7 +157,8 @@ async def process_phone(message: Message, state: FSMContext):
             f"We look forward to seeing you!",
             parse_mode="HTML",
         )
-    except Exception:
+    except (GSpreadException, TelegramAPIError, KeyError) as e:             
+        logger.exception("Failed to process booking: %s", e)
         await message.answer(
             "An error occurred while saving your booking. Please try again later."
         )

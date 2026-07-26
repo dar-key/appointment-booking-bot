@@ -1,5 +1,7 @@
 import gspread_asyncio
 from google.oauth2.service_account import Credentials
+from gspread.exceptions import APIError, GSpreadException
+
 from src.bot.config import GOOGLE_SHEET_ID, logger
 
 
@@ -23,7 +25,7 @@ async def get_booked_slots(date: str) -> list[str]:
         worksheet = await spreadsheet.get_worksheet(0)
         records = await worksheet.get_all_records()
         return [str(row["Time"]) for row in records if str(row["Date"]) == date]
-    except Exception as e:
+    except (APIError, GSpreadException) as e:
         logger.error(f"Failed to read from Google Sheets: {e}")
         return []
 
@@ -45,6 +47,6 @@ async def save_booking_to_sheets(
         ]
         await worksheet.append_row(row_data)
         logger.info(f"Successfully saved booking for {user_id} in Google Sheets.")
-    except Exception as e:
+    except (APIError, GSpreadException) as e:
         logger.error(f"Failed to write to Google Sheets: {e}")
-        raise e
+        raise

@@ -1,4 +1,5 @@
 import asyncio
+
 from aiogram import Bot, Dispatcher
 
 from src.bot.config import BOT_TOKEN, logger

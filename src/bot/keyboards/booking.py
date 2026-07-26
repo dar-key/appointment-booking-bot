@@ -1,8 +1,8 @@
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
-from src.bot.config import SERVICES, TIME_SLOTS
+
 from src.bot.callback_data.booking import (
-    ServiceCb,
     DateCb,
+    ServiceCb,
     TimeCb,
 )
 from src.bot.config import SERVICES, TIME_SLOTS
