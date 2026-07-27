@@ -15,6 +15,7 @@ def require_env(name: str) -> str:
 
 BOT_TOKEN = require_env("BOT_TOKEN")
 GOOGLE_SHEET_ID = require_env("GOOGLE_SHEET_ID")
+GOOGLE_CREDENTIALS_FILE = require_env("GOOGLE_CREDENTIALS_FILE")
 
 # App Constants
 SERVICES = ["Haircut ($20)", "Manicure ($15)", "Massage ($35)"]

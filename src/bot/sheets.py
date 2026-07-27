@@ -2,12 +2,12 @@ import gspread_asyncio
 from google.oauth2.service_account import Credentials
 from gspread.exceptions import APIError, GSpreadException
 
-from src.bot.config import GOOGLE_SHEET_ID, logger
+from src.bot.config import GOOGLE_CREDENTIALS_FILE, GOOGLE_SHEET_ID, logger
 
 
 def get_creds():
     return Credentials.from_service_account_file(
-        "credentials.json",
+        GOOGLE_CREDENTIALS_FILE,
         scopes=[
             "https://spreadsheets.google.com/feeds",
             "https://www.googleapis.com/auth/drive",

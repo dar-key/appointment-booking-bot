@@ -1,5 +1,5 @@
 [project]
-name = "service-booking-bot"
+name = "appointment-booking-bot"
 version = "0.1.0"
 description = "Telegram booking bot integrated with Google Sheets"
 readme = "README.md"
