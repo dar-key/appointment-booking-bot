@@ -35,26 +35,8 @@ User selects a service -> chooses a date and time -> enters a phone number -> th
 - aiogram 3
 - gspread
 - Google Sheets API
-- aiosqlite (if used)
+- aiosqlite
 - python-dotenv
-
----
-
-## Project Structure
-
-```text
-.
-├── booking_bot.py
-├── handlers/
-├── keyboards/
-├── states/
-├── services/
-├── database.py
-├── google_sheets.py
-├── config.py
-├── requirements.txt
-└── .env
-```
 
 ---
 
@@ -63,52 +45,23 @@ User selects a service -> chooses a date and time -> enters a phone number -> th
 Clone the repository.
 
 ```bash
-git clone https://github.com/dar-key/service-booking-bot.git
-cd service-booking-bot
+git clone https://github.com/dar-key/appointment-booking-bot.git
+cd appointment-booking-bot
 ```
 
-Create a virtual environment.
+Install the dependencies and create virtual environment.
 
 ```bash
-python -m venv .venv
-```
-
-Activate it.
-
-Linux / macOS
-
-```bash
-source .venv/bin/activate
-```
-
-Windows
-
-```powershell
-.venv\Scripts\activate
-```
-
-Install dependencies.
-
-```bash
-pip install -r requirements.txt
+uv sync
 ```
 
 ---
 
 ## Configuration
 
-Create a `.env` file.
+Place your Google service account credentials (json) in the project root.
 
-```env
-BOT_TOKEN=your_bot_token
-SPREADSHEET_ID=your_google_sheet_id
-```
-
-Place your Google service account credentials in the project root.
-
-```
-credentials.json
-```
+Insert your Telegram bot token, Google Sheet ID and Google credentials file name in the `.env.example`. Rename it to `.env`
 
 ---
 
@@ -126,7 +79,7 @@ credentials.json
 ## Run
 
 ```bash
-python booking_bot.py
+uv run main.py
 ```
 
 ---
