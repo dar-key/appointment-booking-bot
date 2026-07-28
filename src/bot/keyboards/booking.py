@@ -5,7 +5,7 @@ from src.bot.callback_data.booking import (
     ServiceCb,
     TimeCb,
 )
-from src.bot.config import SERVICES, TIME_SLOTS
+from src.bot.constants import SERVICES, TIME_SLOTS
 
 
 def get_start_keyboard() -> InlineKeyboardMarkup:

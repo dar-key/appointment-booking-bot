@@ -17,10 +17,6 @@ BOT_TOKEN = require_env("BOT_TOKEN")
 GOOGLE_SHEET_ID = require_env("GOOGLE_SHEET_ID")
 GOOGLE_CREDENTIALS_FILE = require_env("GOOGLE_CREDENTIALS_FILE")
 
-# App Constants
-SERVICES = ["Haircut ($20)", "Manicure ($15)", "Massage ($35)"]
-TIME_SLOTS = ["10:00", "12:00", "14:00", "16:00", "18:00"]
-
 # Logging Setup
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"

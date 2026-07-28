@@ -1,5 +1,3 @@
-import re
-
 from aiogram import F, Router
 from aiogram.exceptions import TelegramAPIError
 from aiogram.filters import CommandStart
@@ -19,9 +17,11 @@ from src.bot.keyboards.booking import (
     get_start_keyboard,
     get_time_slots_keyboard,
 )
-from src.bot.sheets import get_booked_slots, save_booking_to_sheets
+from src.bot.repositories.sheets import get_booked_slots, save_booking_to_sheets
+from src.bot.services.messages import booking_confirmation
 from src.bot.states import BookingState
 from src.bot.utils.telegram import require_message
+from src.bot.validators.phone import is_valid_phone
 
 router = Router()
 
@@ -114,7 +114,7 @@ async def process_phone(message: Message, state: FSMContext):
 
     phone = message.text.strip()
 
-    if not re.fullmatch(r"^\+?[1-9]\d{1,14}$", re.sub(r"\D", "", phone)):
+    if not is_valid_phone:
         await message.answer(
             "Invalid phone number format. Please enter a valid phone number."
         )
@@ -148,16 +148,12 @@ async def process_phone(message: Message, state: FSMContext):
         )
 
         await message.answer(
-            f"<b>Booking Confirmed!</b>\n\n"
-            f"<b>Your details:</b>\n"
-            f"- Service: <code>{data['service']}</code>\n"
-            f"- Date: <code>{data['date']}</code>\n"
-            f"- Time: <code>{data['time']}</code>\n"
-            f"- Phone: <code>{phone}</code>\n\n"
-            f"We look forward to seeing you!",
+            booking_confirmation(
+                data["service"], data["date"], data["time"], str(phone)
+            ),
             parse_mode="HTML",
         )
-    except (GSpreadException, TelegramAPIError, KeyError) as e:             
+    except (GSpreadException, TelegramAPIError, KeyError) as e:
         logger.exception("Failed to process booking: %s", e)
         await message.answer(
             "An error occurred while saving your booking. Please try again later."
