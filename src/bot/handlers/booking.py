@@ -1,3 +1,5 @@
+import re
+
 from aiogram import F, Router
 from aiogram.exceptions import TelegramAPIError
 from aiogram.filters import CommandStart
@@ -5,6 +7,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
 from gspread.exceptions import GSpreadException
 
+from src.bot import db
 from src.bot.callback_data.booking import (
     DateCb,
     ServiceCb,
@@ -17,11 +20,10 @@ from src.bot.keyboards.booking import (
     get_start_keyboard,
     get_time_slots_keyboard,
 )
-from src.bot.repositories.sheets import get_booked_slots, save_booking_to_sheets
+from src.bot.repositories.sheets import save_booking_to_sheets
 from src.bot.services.messages import booking_confirmation
 from src.bot.states import BookingState
 from src.bot.utils.telegram import require_message
-from src.bot.validators.phone import is_valid_phone
 
 router = Router()
 
@@ -75,13 +77,13 @@ async def process_date(cb: CallbackQuery, callback_data: DateCb, state: FSMConte
     msg = require_message(cb)
     await msg.edit_text("Checking available slots...")
 
-    booked_slots = await get_booked_slots(selected_date)
-    keyboard = get_time_slots_keyboard(booked_slots)
+    booked_slots = await db.get_booked_slots(selected_date)
+    keyboard = get_time_slots_keyboard(booked_slots, selected_date)
 
     data = await state.get_data()
     await msg.edit_text(
         f"Service: {data['service']}\n"
-        f"Date: {selected_date}\n\n"
+        f"Date: {format_date_for_display(selected_date)}\n\n"
         f"Step 3/4: Select an available time slot:",
         reply_markup=keyboard,
     )
@@ -113,18 +115,32 @@ async def process_phone(message: Message, state: FSMContext):
         return
 
     phone = message.text.strip()
+    digits = re.sub(r"\D", "", phone)
+    normalized_phone = f"+{digits}" if phone.startswith("+") else digits
 
-    if not is_valid_phone:
+    if not re.fullmatch(r"^\+?[1-9]\d{7,14}$", normalized_phone):
         await message.answer(
             "Invalid phone number format. Please enter a valid phone number."
         )
         return
 
     data = await state.get_data()
+    user = message.from_user
+    if user is None:
+        await state.clear()
+        return
+
 
     # Race condition check
-    booked_slots = await get_booked_slots(data["date"])
-    if data["time"] in booked_slots:
+    created = await db.create_booking(
+        user_id=user.id,
+        username=user.username,
+        phone=normalized_phone,
+        service=data["service"],
+        date=data["date"],
+        time=data["time"],
+    )
+    if not created:
         await message.answer(
             "Sorry, this slot was just taken by someone else. Please restart with /start to pick another time."
         )
@@ -134,29 +150,43 @@ async def process_phone(message: Message, state: FSMContext):
     await message.answer("Saving your booking, please wait...")
 
     try:
-        user = message.from_user
-        if user is None:
-            return
-
-        await save_booking_to_sheets(
-            user_id=user.id,
-            username=user.username,
-            phone=phone,
-            service=data["service"],
-            date=data["date"],
-            time=data["time"],
-        )
+        try:
+            await save_booking_to_sheets(
+                user_id=user.id,
+                username=user.username,
+                phone=normalized_phone,
+                service=data["service"],
+                date=data["date"],
+                time=data["time"],
+            )
+        except GSpreadException as e:
+            logger.error("Failed to mirror booking to Google Sheets: %s", e)
 
         await message.answer(
             booking_confirmation(
-                data["service"], data["date"], data["time"], str(phone)
+                data["service"], data["date"], data["time"], normalized_phone
             ),
             parse_mode="HTML",
         )
-    except (GSpreadException, TelegramAPIError, KeyError) as e:
+    except (TelegramAPIError, KeyError) as e:
         logger.exception("Failed to process booking: %s", e)
         await message.answer(
             "An error occurred while saving your booking. Please try again later."
         )
 
     await state.clear()
+
+
+@router.callback_query()
+async def fallback_callback(cb: CallbackQuery, state: FSMContext) -> None:
+    await state.clear()
+    await cb.answer(
+        "This button is no longer valid. Please send /start to begin again.",
+        show_alert=True,
+    )
+
+
+@router.message()
+async def fallback_message(message: Message, state: FSMContext) -> None:
+    await state.clear()
+    await message.answer("Please send /start to begin booking an appointment.")

@@ -3,10 +3,13 @@ import asyncio
 from aiogram import Bot, Dispatcher
 
 from src.bot.config import BOT_TOKEN, logger
+from src.bot.db import init_db
 from src.bot.handlers import booking
 
 
 async def main():
+    await init_db()
+
     bot = Bot(token=BOT_TOKEN)
     dp = Dispatcher()
 

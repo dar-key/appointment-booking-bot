@@ -6,12 +6,19 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "aiogram>=3.12.0",
+    "aiosqlite>=0.22.1",
     "google-auth>=2.30.0",
     "gspread-asyncio>=2.0.0",
     "python-dotenv>=1.0.0",
+    "tzdata>=2026.3",
 ]
 
 [dependency-groups]
 dev = [
+    "pytest>=9.1.1",
     "ruff>=0.16.0",
+    "taskipy>=1.14.1",
 ]
+
+[tool.taskipy.tasks]
+start = "uv run --env-file .env main.py"
