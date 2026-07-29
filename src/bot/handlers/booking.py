@@ -1,5 +1,3 @@
-import re
-
 from aiogram import F, Router
 from aiogram.exceptions import TelegramAPIError
 from aiogram.filters import CommandStart, ExceptionTypeFilter
@@ -25,6 +23,7 @@ from src.bot.services.messages import booking_confirmation
 from src.bot.states import BookingState
 from src.bot.utils.telegram import require_message
 from src.bot.utils.time import format_date_for_display, is_slot_in_past
+from src.bot.validators.phone import normalize_phone
 
 router = Router()
 
@@ -114,11 +113,9 @@ async def process_phone(message: Message, state: FSMContext):
         await message.answer("Please send a text message.")
         return
 
-    phone = message.text.strip()
-    digits = re.sub(r"\D", "", phone)
-    normalized_phone = f"+{digits}" if phone.startswith("+") else digits
+    normalized_phone = normalize_phone(message.text)
 
-    if not re.fullmatch(r"^\+?[1-9]\d{7,14}$", normalized_phone):
+    if normalized_phone is None:
         await message.answer(
             "Invalid phone number format. Please enter a valid phone number."
         )
