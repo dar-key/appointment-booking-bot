@@ -10,7 +10,7 @@ def now() -> datetime.datetime:
 
 def is_slot_in_past(date: str, time: str) -> bool:
     """date: 'YYYY-MM-DD', time: 'HH:MM', both interpreted in TIMEZONE."""
-    slot_dt = datetime.datetime.strptime(f"{date} {time}", "%Y-%m-%d %H:%M").replace(
+    slot_dt = datetime.datetime.strptime(f"{date} {time}", "%Y-%m-%d %I:%M %p").replace(
         tzinfo=ZoneInfo(TIMEZONE)
     )
     return slot_dt <= now()
