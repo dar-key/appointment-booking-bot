@@ -1,5 +1,4 @@
-from datetime import datetime, timedelta
-from zoneinfo import ZoneInfo
+from datetime import timedelta
 
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
@@ -8,7 +7,6 @@ from src.bot.callback_data.booking import (
     ServiceCb,
     TimeCb,
 )
-from src.bot.config import TIMEZONE
 from src.bot.constants import BOOKING_DAYS_AHEAD, SERVICES, TIME_SLOTS
 from src.bot.utils.time import is_slot_in_past, now
 
