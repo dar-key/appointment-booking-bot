@@ -7,6 +7,7 @@ requires-python = ">=3.12"
 dependencies = [
     "aiogram>=3.29.0",
     "aiosqlite>=0.22.1",
+    "cachetools>=7.1.6",
     "dotenv>=0.9.9",
     "google-auth>=2.55.1",
     "gspread-asyncio>=2.0.0",

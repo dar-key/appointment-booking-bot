@@ -4,12 +4,20 @@ from typing import Any
 
 from aiogram import BaseMiddleware
 from aiogram.types import TelegramObject, Update
+from cachetools import TTLCache
 
 
 class ThrottlingMiddleware(BaseMiddleware):
-    def __init__(self, rate: float = 0.7) -> None:
+    def __init__(
+        self,
+        rate: float = 0.7,
+        maxsize: int = 10_000,
+        ttl: float = 60.0,
+    ) -> None:
         self.rate = rate
-        self._last_seen: dict[int, float] = {}
+        self._last_seen: TTLCache[int, float] = TTLCache[int, float](
+            maxsize=maxsize, ttl=ttl
+        )
 
     async def __call__(
         self,
