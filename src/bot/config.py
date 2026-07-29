@@ -18,6 +18,8 @@ GOOGLE_SHEET_ID = require_env("GOOGLE_SHEET_ID")
 GOOGLE_CREDENTIALS_FILE = require_env("GOOGLE_CREDENTIALS_FILE")
 DB_PATH = require_env("DB_PATH")
 
+TIMEZONE = os.getenv("TIMEZONE", "UTC")
+
 # Logging Setup
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"

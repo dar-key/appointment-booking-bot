@@ -1,3 +1,6 @@
+from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
+
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
 from src.bot.callback_data.booking import (
@@ -5,7 +8,11 @@ from src.bot.callback_data.booking import (
     ServiceCb,
     TimeCb,
 )
-from src.bot.constants import SERVICES, TIME_SLOTS
+from src.bot.config import TIMEZONE
+from src.bot.constants import BOOKING_DAYS_AHEAD, SERVICES, TIME_SLOTS
+from src.bot.utils.time import is_slot_in_past, now
+
+_RELATIVE_LABELS = ["Today", "Tomorrow"]
 
 
 def get_start_keyboard() -> InlineKeyboardMarkup:
@@ -33,30 +40,40 @@ def get_services_keyboard() -> InlineKeyboardMarkup:
 
 
 def get_dates_keyboard() -> InlineKeyboardMarkup:
-    return InlineKeyboardMarkup(
-        inline_keyboard=[
+    today = now()
+    buttons = []
+    for i in range(BOOKING_DAYS_AHEAD):
+        day = today + timedelta(days=i)
+        label = _RELATIVE_LABELS[i] if i < len(_RELATIVE_LABELS) else day.strftime("%A")
+        display = day.strftime("%d.%m")
+        iso_date = day.strftime("%Y-%m-%d")
+        buttons.append(
             [
                 InlineKeyboardButton(
-                    text="Today (25.06)", callback_data=DateCb(date="25.06").pack()
+                    text=f"{label} ({display})",
+                    callback_data=DateCb(date=iso_date).pack(),
                 )
-            ],
-            [
-                InlineKeyboardButton(
-                    text="Tomorrow (26.06)", callback_data=DateCb(date="26.06").pack()
-                )
-            ],
-        ]
-    )
+            ]
+        )
+    return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 
-def get_time_slots_keyboard(booked_slots: list[str]) -> InlineKeyboardMarkup:
+def get_time_slots_keyboard(booked_slots: list[str], date: str) -> InlineKeyboardMarkup:
     buttons = []
     for slot in TIME_SLOTS:
         if slot in booked_slots:
             buttons.append(
                 [
                     InlineKeyboardButton(
-                        text=f"{slot} (Booked)", callback_data="slot_taken"
+                        text=f"{slot} (Booked)", callback_data="slot_unavailable"
+                    )
+                ]
+            )
+        elif is_slot_in_past(date, slot):
+            buttons.append(
+                [
+                    InlineKeyboardButton(
+                        text=f"{slot} (Past)", callback_data="slot_unavailable"
                     )
                 ]
             )

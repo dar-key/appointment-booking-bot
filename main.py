@@ -17,7 +17,10 @@ async def main():
     dp.include_router(booking.router)
 
     logger.info("Bot starting...")
-    await dp.start_polling(bot)
+    try:
+        await dp.start_polling(bot)
+    finally:
+        await bot.session.close()
 
 
 if __name__ == "__main__":

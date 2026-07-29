@@ -24,6 +24,7 @@ from src.bot.repositories.sheets import save_booking_to_sheets
 from src.bot.services.messages import booking_confirmation
 from src.bot.states import BookingState
 from src.bot.utils.telegram import require_message
+from src.bot.utils.time import format_date_for_display, is_slot_in_past
 
 router = Router()
 
@@ -90,11 +91,10 @@ async def process_date(cb: CallbackQuery, callback_data: DateCb, state: FSMConte
     await state.set_state(BookingState.choosing_time)
 
 
-@router.callback_query(F.data == "slot_taken")
-async def process_slot_taken(callback: CallbackQuery):
+@router.callback_query(F.data == "slot_unavailable")
+async def process_slot_unavailable(callback: CallbackQuery):
     await callback.answer(
-        "This slot is already booked. Please select an available slot!",
-        show_alert=True,
+        "This slot isn't available anymore. Please select another.", show_alert=True
     )
 
 
@@ -130,6 +130,12 @@ async def process_phone(message: Message, state: FSMContext):
         await state.clear()
         return
 
+    if is_slot_in_past(data["date"], data["time"]):
+        await message.answer(
+            "Sorry, that time has already passed. Please restart with /start to pick another slot."
+        )
+        await state.clear()
+        return
 
     # Race condition check
     created = await db.create_booking(
