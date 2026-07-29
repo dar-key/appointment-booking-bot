@@ -9,8 +9,8 @@ def get_creds():
     return Credentials.from_service_account_file(
         GOOGLE_CREDENTIALS_FILE,
         scopes=[
-            "https://spreadsheets.google.com/feeds",
-            "https://www.googleapis.com/auth/drive",
+            "https://www.googleapis.com/auth/spreadsheets",
+            "https://www.googleapis.com/auth/drive.file",
         ],
     )
 
