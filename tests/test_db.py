@@ -14,7 +14,7 @@ async def temp_db(tmp_path, monkeypatch):
 
 @pytest.mark.asyncio
 async def test_create_booking_succeeds_for_free_slot(temp_db):
-    created = await db.create_booking(
+    booking_id = await db.create_booking(
         user_id=1,
         username="alice",
         phone="+12025550123",
@@ -22,7 +22,7 @@ async def test_create_booking_succeeds_for_free_slot(temp_db):
         date="2026-08-01",
         time="10:00",
     )
-    assert created is True
+    assert booking_id is not None
 
 
 @pytest.mark.asyncio
@@ -43,8 +43,8 @@ async def test_double_booking_same_slot_is_rejected(temp_db):
         date="2026-08-01",
         time="10:00",
     )
-    assert first is True
-    assert second is False
+    assert first is not None
+    assert second is None
 
 
 @pytest.mark.asyncio
@@ -65,8 +65,8 @@ async def test_same_time_different_date_is_allowed(temp_db):
         date="2026-08-02",
         time="10:00 AM",
     )
-    assert first is True
-    assert second is True
+    assert first is not None
+    assert second is not None
 
 
 @pytest.mark.asyncio
