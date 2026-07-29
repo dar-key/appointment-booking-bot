@@ -5,20 +5,24 @@ description = "Telegram booking bot integrated with Google Sheets"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "aiogram>=3.12.0",
+    "aiogram>=3.29.0",
     "aiosqlite>=0.22.1",
-    "google-auth>=2.30.0",
+    "dotenv>=0.9.9",
+    "google-auth>=2.55.1",
     "gspread-asyncio>=2.0.0",
-    "python-dotenv>=1.0.0",
     "tzdata>=2026.3",
 ]
 
 [dependency-groups]
 dev = [
     "pytest>=9.1.1",
+    "pytest-asyncio>=1.4.0",
     "ruff>=0.16.0",
     "taskipy>=1.14.1",
 ]
 
 [tool.taskipy.tasks]
 start = "uv run --env-file .env main.py"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"

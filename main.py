@@ -1,11 +1,11 @@
 import asyncio
 
 from aiogram import Bot, Dispatcher
-from src.bot.middlewares.throttling import ThrottlingMiddleware
 
 from src.bot.config import BOT_TOKEN, logger
 from src.bot.db import init_db
 from src.bot.handlers import booking
+from src.bot.middlewares.throttling import ThrottlingMiddleware
 
 
 async def main():
