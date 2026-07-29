@@ -1,8 +1,11 @@
 import sqlite3
+from datetime import timedelta
 
 import aiosqlite
+from aiogram.fsm.storage.redis import RedisStorage
+from redis.asyncio import Redis
 
-from src.bot.config import DB_PATH, logger
+from src.bot.config import DB_PATH, REDIS_DB, REDIS_HOST, REDIS_PORT, logger
 
 
 async def init_db() -> None:
@@ -24,6 +27,24 @@ async def init_db() -> None:
         )
         await db.commit()
     logger.info("Database ready at %s", DB_PATH)
+
+
+async def init_redis() -> RedisStorage:
+
+    redis_client = Redis(
+        host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB, decode_responses=True
+    )
+
+    # Set states to automatically expire if abandoned after 24 hours
+    storage = RedisStorage(
+        redis=redis_client,
+        state_ttl=timedelta(hours=24),
+        data_ttl=timedelta(hours=24),
+    )
+
+    logger.info("RedisStorage has been loaded")
+
+    return storage
 
 
 async def get_booked_slots(date: str) -> list[str]:

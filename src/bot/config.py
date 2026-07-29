@@ -18,6 +18,9 @@ GOOGLE_SHEET_ID = require_env("GOOGLE_SHEET_ID")
 GOOGLE_CREDENTIALS_FILE = require_env("GOOGLE_CREDENTIALS_FILE")
 DB_PATH = require_env("DB_PATH")
 
+REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
+REDIS_PORT = int(os.getenv("REDIS_PORT", "6379"))
+REDIS_DB = int(os.getenv("REDIS_DB", "0"))
 TIMEZONE = os.getenv("TIMEZONE", "UTC")
 
 # Logging Setup

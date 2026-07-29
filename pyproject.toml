@@ -10,6 +10,7 @@ dependencies = [
     "dotenv>=0.9.9",
     "google-auth>=2.55.1",
     "gspread-asyncio>=2.0.0",
+    "redis>=8.0.1",
     "tzdata>=2026.3",
 ]
 
