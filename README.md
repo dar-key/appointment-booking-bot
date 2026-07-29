@@ -42,26 +42,30 @@ User selects a service -> chooses a date and time -> enters a phone number -> th
 
 ## Installation
 
-Clone the repository.
+1. Clone the repository.
 
-```bash
-git clone https://github.com/dar-key/appointment-booking-bot.git
-cd appointment-booking-bot
-```
+   ```bash
+   git clone https://github.com/dar-key/appointment-booking-bot.git
+   cd appointment-booking-bot
+   ```
 
-Install the dependencies and create virtual environment.
+2. Install the dependencies.
 
-```bash
-uv sync
-```
+   ```bash
+   uv sync
+   ```
 
----
+3. Copy the environment template to a new `.env` file and add your variables:
 
-## Configuration
+   ```bash
+   cp .env.example .env
+   ```
 
-Place your Google service account credentials (json) in the project root.
+4. Run the bot.
 
-Insert your Telegram bot token, Google Sheet ID and Google credentials file name in the `.env.example`. Rename it to `.env`
+   ```bash
+   uv run task start
+   ```
 
 ---
 
@@ -76,14 +80,8 @@ Insert your Telegram bot token, Google Sheet ID and Google credentials file name
 
 ---
 
-## Run
+## Configuration
 
-```bash
-uv run main.py
-```
+Place your Google service account credentials (json) in the project root.
 
----
-
-## License
-
-MIT
+Insert your Telegram bot token, Google Sheet ID and Google credentials file name in the `.env.example`. Rename it to `.env`
