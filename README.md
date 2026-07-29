@@ -1,87 +1,94 @@
 # Appointment Booking Telegram Bot
 
-A Telegram bot for booking appointments with Google Sheets as the backend.
+A Telegram bot for scheduling salon appointments with real-time slot validation, local SQLite persistence, Google Sheets synchronization, and Redis FSM storage.
 
-The bot guides users through the booking process, checks time slot availability, and stores reservations in a shared Google Spreadsheet.
+## Demo
 
-> **Demo Bot**
->
-> https://t.me/booking_temp_bot
-
----
-
-**Demo**
-
-User selects a service -> chooses a date and time -> enters a phone number -> the booking instantly appears in Google Sheets.
+User selects a service -> chooses a date and time -> enters a phone number -> the booking is saved to the local database and synced to Google Sheets.
 
 ![Demo](docs/demo.apng)
 
----
+## Architecture & Design
 
-## Features
-
-- Step-by-step booking flow
-- Google Sheets integration
-- Prevents double bookings
-- Checks available time slots before confirmation
-- Asynchronous request handling
-- Multi-user support
-
----
+- **FSM Storage (Redis):** User states and form data are stored in Redis (`RedisStorage`), persisting across bot restarts.
+- **Local Persistence (Outbox Pattern):** Bookings are written to a local SQLite database first to prevent data loss.
+- **Google Sheets Sync:** Bookings are synced to Google Sheets asynchronously. Failed API calls retry via exponential backoff (`tenacity`) and are reconciled by a background task.
+- **Race Condition Prevention:** Time slot conflicts are guarded by SQLite `UNIQUE(date, time)` constraints.
+- **Rate Limiting:** `ThrottlingMiddleware` uses `cachetools.TTLCache` to bound memory usage while preventing spam.
 
 ## Tech Stack
 
-- Python 3.11+
-- aiogram 3
-- gspread
-- Google Sheets API
-- aiosqlite
-- python-dotenv
-
----
+- Python 3.14+
+- uv (Package Manager)
+- aiogram 3.x
+- Redis (`redis-py`)
+- SQLite (`aiosqlite`)
+- Google Sheets API (`gspread-asyncio`)
+- taskipy
 
 ## Installation
 
-1. Clone the repository.
+1. Clone the repository:
 
    ```bash
    git clone https://github.com/dar-key/appointment-booking-bot.git
    cd appointment-booking-bot
    ```
 
-2. Install the dependencies.
+````
+
+2. Install dependencies:
 
    ```bash
    uv sync
    ```
 
-3. Copy the environment template to a new `.env` file and add your variables:
+3. Copy the environment template and set your values:
 
    ```bash
    cp .env.example .env
    ```
 
-4. Run the bot.
+4. Place your Google Service Account credentials file (`credentials.json`) in the project root.
+
+5. Start the bot:
 
    ```bash
    uv run task start
    ```
 
----
-
 ## Google Sheets Setup
 
-1. Create a project in Google Cloud Console.
-2. Enable the **Google Sheets API** and **Google Drive API**.
-3. Create a Service Account and download its JSON credentials.
-4. Rename the file to `credentials.json`.
-5. Share your spreadsheet with the Service Account email.
-6. Copy the spreadsheet ID into your `.env` file.
+1. Open Google Cloud Console and create a project.
+2. Enable the Google Sheets API and Google Drive API.
+3. Create a Service Account, generate a JSON key, and download it to the root directory as `credentials.json`.
+4. Share your target Google Sheet with the Service Account email (Editor permissions).
+5. Copy the Spreadsheet ID into `.env` (`GOOGLE_SHEET_ID`).
 
----
+## Docker Deployment
 
-## Configuration
+Start the bot and Redis containers using Docker Compose:
 
-Place your Google service account credentials (json) in the project root.
+```bash
+# Build and start services in background
+docker compose up -d --build
 
-Insert your Telegram bot token, Google Sheet ID and Google credentials file name in the `.env.example`. Rename it to `.env`
+# View logs
+docker compose logs -f bot
+
+# Stop services
+docker compose down
+```
+
+`credentials.json` is mounted read-only at runtime via `docker-compose.yml` to prevent baking secrets into the image.
+
+## Testing and Quality
+
+```bash
+# Run test suite
+uv run pytest
+
+# Run linter
+uv run ruff check .
+```
+````
