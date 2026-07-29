@@ -2,9 +2,9 @@ import re
 
 from aiogram import F, Router
 from aiogram.exceptions import TelegramAPIError
-from aiogram.filters import CommandStart
+from aiogram.filters import CommandStart, ExceptionTypeFilter
 from aiogram.fsm.context import FSMContext
-from aiogram.types import CallbackQuery, Message
+from aiogram.types import CallbackQuery, ErrorEvent, Message
 from gspread.exceptions import GSpreadException
 
 from src.bot import db
@@ -181,6 +181,31 @@ async def process_phone(message: Message, state: FSMContext):
         )
 
     await state.clear()
+
+
+@router.errors(ExceptionTypeFilter(Exception), F.update.message.as_("message"))
+async def handle_message_error(event: ErrorEvent, message: Message) -> None:
+    logger.exception("Unhandled error while processing message: %s", event.exception)
+    try:
+        await message.answer(
+            "Something went wrong on our end. Please send /start to try again."
+        )
+    except TelegramAPIError:
+        pass
+
+
+@router.errors(ExceptionTypeFilter(Exception), F.update.callback_query.as_("cb"))
+async def handle_callback_error(event: ErrorEvent, cb: CallbackQuery) -> None:
+    logger.exception(
+        "Unhandled error while processing callback query: %s", event.exception
+    )
+    try:
+        await cb.answer(
+            "Something went wrong. Please send /start to try again.",
+            show_alert=True,
+        )
+    except TelegramAPIError:
+        pass
 
 
 @router.callback_query()
