@@ -21,6 +21,7 @@ async def init_db() -> None:
                 date TEXT NOT NULL,
                 time TEXT NOT NULL,
                 created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+                synced_to_sheets BOOLEAN DEFAULT FALSE,
                 UNIQUE(date, time)
             )
             """
@@ -56,10 +57,10 @@ async def get_booked_slots(date: str) -> list[str]:
 
 async def create_booking(
     user_id: int, username: str | None, phone: str, service: str, date: str, time: str
-) -> bool:
+) -> int | None:
     async with aiosqlite.connect(DB_PATH) as db:
         try:
-            await db.execute(
+            cursor = await db.execute(
                 """
                 INSERT INTO bookings (user_id, username, phone, service, date, time)
                 VALUES (?, ?, ?, ?, ?, ?)
@@ -67,6 +68,25 @@ async def create_booking(
                 (user_id, username, phone, service, date, time),
             )
             await db.commit()
-            return True
+            return cursor.lastrowid
         except sqlite3.IntegrityError:
-            return False
+            return None
+
+
+async def mark_booking_synced(booking_id: int) -> None:
+    async with aiosqlite.connect(DB_PATH) as db:
+        await db.execute(
+            "UPDATE bookings SET synced_to_sheets = TRUE WHERE id = ?",
+            (booking_id,),
+        )
+        await db.commit()
+
+
+async def get_unsynced_bookings() -> list[dict]:
+    async with aiosqlite.connect(DB_PATH) as db:
+        db.row_factory = aiosqlite.Row  # Access columns by name
+        cursor = await db.execute(
+            "SELECT * FROM bookings WHERE synced_to_sheets = FALSE"
+        )
+        rows = await cursor.fetchall()
+        return [dict(row) for row in rows]

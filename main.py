@@ -6,6 +6,7 @@ from src.bot.config import BOT_TOKEN, logger
 from src.bot.db import init_db, init_redis
 from src.bot.handlers import booking
 from src.bot.middlewares.throttling import ThrottlingMiddleware
+from src.bot.tasks.sheets_sync import setup_sheets_sync_task
 
 
 async def main():
@@ -15,11 +16,14 @@ async def main():
     bot = Bot(token=BOT_TOKEN)
     dp = Dispatcher(storage=storage)
 
+    # Register middlewares
     dp.message.outer_middleware(ThrottlingMiddleware())
-    dp.callback_query.outer_middleware(ThrottlingMiddleware())
 
     # Register routers
     dp.include_router(booking.router)
+
+    # Register background tasks
+    setup_sheets_sync_task(dp)
 
     try:
         await dp.start_polling(bot)

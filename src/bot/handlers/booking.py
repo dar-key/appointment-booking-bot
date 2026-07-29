@@ -135,7 +135,7 @@ async def process_phone(message: Message, state: FSMContext):
         return
 
     # Race condition check
-    created = await db.create_booking(
+    booking_id = await db.create_booking(
         user_id=user.id,
         username=user.username,
         phone=normalized_phone,
@@ -143,7 +143,7 @@ async def process_phone(message: Message, state: FSMContext):
         date=data["date"],
         time=data["time"],
     )
-    if not created:
+    if booking_id is None:
         await message.answer(
             "Sorry, this slot was just taken by someone else. Please restart with /start to pick another time."
         )
@@ -153,18 +153,23 @@ async def process_phone(message: Message, state: FSMContext):
     await message.answer("Saving your booking, please wait...")
 
     try:
-        try:
-            await save_booking_to_sheets(
-                user_id=user.id,
-                username=user.username,
-                phone=normalized_phone,
-                service=data["service"],
-                date=data["date"],
-                time=data["time"],
-            )
-        except GSpreadException as e:
-            logger.error("Failed to mirror booking to Google Sheets: %s", e)
+        await save_booking_to_sheets(
+            user_id=user.id,
+            username=user.username,
+            phone=normalized_phone,
+            service=data["service"],
+            date=data["date"],
+            time=data["time"],
+        )
+        await db.mark_booking_synced(booking_id)
+    except GSpreadException as e:
+        logger.critical(
+            "Booking #%s saved locally, but Google Sheets sync failed: %s",
+            booking_id,
+            e,
+        )
 
+    try:
         await message.answer(
             booking_confirmation(
                 data["service"], data["date"], data["time"], normalized_phone
