@@ -18,18 +18,6 @@ def get_creds():
 agcm = gspread_asyncio.AsyncioGspreadClientManager(get_creds)
 
 
-async def get_booked_slots(date: str) -> list[str]:
-    try:
-        agc = await agcm.authorize()
-        spreadsheet = await agc.open_by_key(GOOGLE_SHEET_ID)
-        worksheet = await spreadsheet.get_worksheet(0)
-        records = await worksheet.get_all_records()
-        return [str(row["Time"]) for row in records if str(row["Date"]) == date]
-    except (APIError, GSpreadException) as e:
-        logger.error(f"Failed to read from Google Sheets: {e}")
-        return []
-
-
 async def save_booking_to_sheets(
     user_id: int, username: str | None, phone: str, service: str, date: str, time: str
 ):
