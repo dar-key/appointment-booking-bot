@@ -10,6 +10,17 @@ from tenacity import (
 
 from src.bot.config import GOOGLE_CREDENTIALS_FILE, GOOGLE_SHEET_ID, logger
 
+# If the sheet is ever exported to CSV and opened elsewhere, a value like
+# "+1234567" phone numbers would otherwise be read as a formula.
+# Neutralize this at write time so the exported file is safe too.
+_FORMULA_TRIGGER_CHARS = ("=", "+", "-", "@")
+
+
+def _sheet_safe(value: str) -> str:
+    if value and value[0] in _FORMULA_TRIGGER_CHARS:
+        return f"'{value}"
+    return value
+
 
 def get_creds():
     return Credentials.from_service_account_file(
@@ -45,7 +56,7 @@ async def save_booking_to_sheets(
         row_data = [
             user_id,
             f"@{username}" if username else "N/A",
-            phone,
+            _sheet_safe(phone),
             service,
             date,
             time,
