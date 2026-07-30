@@ -10,6 +10,9 @@ from src.bot.config import DB_PATH, REDIS_DB, REDIS_HOST, REDIS_PORT, logger
 
 async def init_db() -> None:
     async with aiosqlite.connect(DB_PATH) as db:
+        await db.execute("PRAGMA journal_mode=WAL")
+        await db.execute("PRAGMA busy_timeout=5000")
+        await db.execute("PRAGMA synchronous=NORMAL")
         await db.execute(
             """
             CREATE TABLE IF NOT EXISTS bookings (
