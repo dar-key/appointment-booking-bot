@@ -23,7 +23,7 @@ async def main():
     dp.include_router(booking.router)
 
     # Register background tasks
-    setup_sheets_sync_task(dp)
+    setup_sheets_sync_task(dp, bot)
 
     try:
         await dp.start_polling(bot)

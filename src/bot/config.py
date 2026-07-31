@@ -23,6 +23,9 @@ REDIS_PORT = int(os.getenv("REDIS_PORT", "6379"))
 REDIS_DB = int(os.getenv("REDIS_DB", "0"))
 TIMEZONE = os.getenv("TIMEZONE", "UTC")
 
+_admin_id_raw = os.getenv("ADMIN_ID")
+ADMIN_ID = int(_admin_id_raw) if _admin_id_raw and _admin_id_raw.isdigit() else None
+
 # Logging Setup
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
