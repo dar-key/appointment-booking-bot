@@ -18,7 +18,7 @@ User selects a service -> chooses a date and time -> enters a phone number -> th
 
 ## Tech Stack
 
-- Python 3.12+
+- Python 3.10
 - uv (Package Manager)
 - aiogram 3.x
 - Redis (`redis-py`)
@@ -30,7 +30,7 @@ User selects a service -> chooses a date and time -> enters a phone number -> th
 
 ### Prerequisites
 
-- Python 3.12+ (managed via `uv`)
+- Python 3.10+ (managed via `uv`)
 - Redis Server (for local development)
 
 ### 1. Project Setup

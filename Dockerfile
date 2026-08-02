@@ -1,26 +1,27 @@
-FROM ghcr.io/astral-sh/uv:python3.14-bookworm-slim
+FROM ghcr.io/astral-sh/uv:python3.10-bookworm-slim
 
-# Prevent bytecode writing & enable uv caching
+# 1. Set environment variables early
 ENV UV_COMPILE_BYTECODE=1 \
     UV_LINK_MODE=copy \
-    PYTHONUNBUFFERED=1
+    PYTHONUNBUFFERED=1 \
+    PATH="/app/.venv/bin:$PATH"
 
 WORKDIR /app
 
-# Install dependencies using uv.lock (cached layer)
+# 2. Setup persistent directory first
+RUN mkdir -p /app/data && chown -R nobody:nogroup /app/data
+
+# 3. Install dependencies using uv cache mount
 RUN --mount=type=cache,target=/root/.cache/uv \
     --mount=type=bind,source=uv.lock,target=uv.lock \
     --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
-    uv sync --frozen --no-dev
+    uv sync --frozen --no-dev --python 3.10
 
-# Copy project files
+# 4. Copy project source code
 COPY . /app
+RUN chown -R nobody:nogroup /app
 
-# Create directory for persistent SQLite database
-RUN mkdir -p /app/data
+# 5. Drop root privileges for safety
+USER nobody
 
-# Put virtual environment on PATH
-ENV PATH="/app/.venv/bin:$PATH"
-
-# Run the bot
 CMD ["python", "main.py"]
