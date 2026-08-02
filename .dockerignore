@@ -1,12 +1,25 @@
+# Git
 .git
 .gitignore
-.venv
-__pycache__
-*.pyc
-.pytest_cache
-.ruff_cache
+
+# uv caches
+.uv/
+.uv-cache/
+
+# Sensitive files and local data
 .env
-data/
-docs/
-*.db
 credentials.json
+data/
+**/*.db
+
+# Python caches and environments
+.venv/
+env/
+venv/
+**/__pycache__/
+**/*.pyc
+.pytest_cache/
+.ruff_cache/
+
+# Documentation
+docs/
